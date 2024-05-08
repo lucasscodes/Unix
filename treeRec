@@ -1,0 +1,38 @@
+#!bin/bash
+
+declare -A arr #assoziative arr string=>value
+
+f() { #recursion for a single splitting branch
+    local d=$1 l=$2 r=$3 c=$4 #iteration left, iteration size, row, column
+    if [[ $d -eq 0 ]]; then #no iterations left
+        return
+    fi
+    for ((i=l; i; i--)); do #repeat for straight growth
+        arr[$((r-i)).$c]=1
+    done
+    for ((i=l; i; i--)); do #change for diagonals
+        arr[$((r-l-i)).$((c-i))]=1
+        arr[$((r-l-i)).$((c+i))]=1
+    done
+    #ATTENTION: bash is passing the reference and using it further in the recursion 
+    #=> NEED to calculate parameters TWICE!
+    #one iteration left, size halves, both length subtracted, offset
+    f $((d-1)) $((l/2)) $((r-2*l)) $((c-l)) #left
+    f $((d-1)) $((l/2)) $((r-2*l)) $((c+l)) #right
+}
+width=100
+# iterations, startsize, height, position of point
+f 6 16 63 $(($width / 2))
+
+for ((i=0; i<63; i++)); do
+    for ((j=0; j<100; j++)); do
+        # lazy evaluation realizes if/else with AND/OR
+        # printf "$([ ${arr[$i.$j]} ] && echo 1 || echo _)"
+        if [[ ${arr[$i.$j]} ]]; then
+            printf 1
+        else
+            printf _
+        fi
+    done
+    echo
+done

@@ -1,0 +1,203 @@
+#Print
+echo "HELLO"
+print $val
+printf %.3f $float
+
+#Float
+echo "scale=2; $X / $Y" | bc
+
+#Int
+echo $(($X + $Y))
+echo $(($X - $Y))
+echo $(($X * $Y))
+echo $(($X / $Y))
+
+#Await input from prompt
+read -p "Please give..." var
+read var
+
+#Conditional
+if [[ $X == $Y && $Y == $Z ]]; then
+    echo "EQUILATERAL"
+else 
+    if [[  $X == $Y || $Y == $Z || $X == $Z ]]; then
+        echo "ISOSCELES"
+    else
+        echo "SCALENE"
+    fi
+fi
+
+#Loop
+for i in {1..50}; do
+    echo $i
+done
+for ((i=1; i<100; i+=2)); do
+    echo "$i"
+done
+
+#Math
+float=$(echo $expression | bc -l)
+sum=0
+(( i=0; i<$n; i++))
+(( sum += $m ))
+
+#Associative Array
+declare -A arr
+arr["$((row + $length + i - 1)).$((pos + i))"]=""
+arr["$((row + $length + i - 1)).$((pos - i))"]=""
+echo ${arr[@]}
+if [[ -v "arr[$y.$x]" ]]; then #got value?
+
+#RecTree
+read iterations
+declare -A arr
+rec () {
+    #isolate => NOT pass up changes => call rec twice with same vars
+    local iteration=$1
+    local row=$2
+    local length=$3
+    local pos=$4
+    #endcase
+    if (( $iteration <= 0 )); then 
+        return 
+    fi
+    #straight
+    for ((i=0; i<$length; i++)); do
+        arr["$((row+i)).$pos"]=""
+    done
+    #diagonals
+    for ((i=0; i<$length; i++)); do
+        arr["$((row + $length + i)).$((pos + (i+1)))"]=""
+        arr["$((row + $length + i)).$((pos - (i+1)))"]=""
+    done
+    #further on
+    rec "$(($iteration-1))" "$(($row+$length+$length))" "$(($length/2))" "$(($pos-$length))"
+    rec "$(($iteration-1))" "$(($row+$length+$length))" "$(($length/2))" "$(($pos+$length))"
+}
+rec $iterations "0" "16" "$((99/2))"
+for (( y=62; y>=0; y--)); do
+    row=""
+    for (( x=0; x<100; x++)); do
+        if [[ -v "arr[$y.$x]" ]]; then
+            row+="1"
+        else
+            row+="_"
+        fi
+    done
+    echo $row
+done
+
+PIPED SHELL
+_________________________________________________________________
+#Arrays
+declare -a arr=('Debian' 'Red hat' 'Ubuntu' 'Suse' 'Fedora');
+declare -a arr=( ${Unix[@]/Red*/} )
+declare -a arr=$(paste -s $1)
+readarray arr #This is not serial but indexed!
+echo ${arr[3]}
+echo ${arr[@]}
+echo ${#arr[@]} #Count of elements
+
+#RegEx on Arr
+echo ${arr[@]/*[aA]*/NO} #replace first /*[aA]*/ in arr with /NO/ (RegEx)
+echo ${arr[@]//[A-Z]/.} #replace all Capitals with .
+
+#XOR
+res=$(($res^n))
+
+#Cut 
+#params [-b/Bytes, -c/Chars, -f/Fields (-d denominator)] arg
+echo "Hello World" | cut -c 2,7 $1
+cut -c 3-10 $1
+cut -c -10 $1
+cut -c 3- $1
+cut -f 2 -d : $1
+cut -f 1-3 -d $'\t' $1 (btw this tab is also default case)
+cut -f 4 -d " " $1
+
+#Head/Tail
+#params -n/c(lines or chars) number arg
+tail -n 20 $1
+tail -c 20 $1
+echo file | head -n 20 $1
+head -n 22 | tail -n $((22-12+1))
+
+#TR Translate
+#params from-map/d(delete)/s(squeeze) to-map arg
+tr "()" "[]" $1
+tr -d "a-z" $1
+tr -s " " $1
+
+#Sort
+#params -r(reverse)/n(numeric)/R(random)/u(unique) -k(From,ToCHAR/FIELD) -t(Field delimiter)
+sort -d $1 #lexicographicalls
+sort -rd $1
+sort -n $1
+sort -rn $1
+sort -nr -k2 -t$'\t' $1 
+sort -rn -k2 -t "|" $1
+
+#Uniq eliminate consecutive reps
+#params -c(count)/i(case insentive)/u(unique only)
+uniq -c $1 | cut -c 7- $1 #no leading spaces
+uniq -ci $1 | cut -c 7- $1
+uniq -u $1
+
+#Paste transpose 2D file
+#params -s(serialize)/d(delimiter string for separation)
+paste -s $1
+paste -s -d "  \n" $1
+paste -s -d ";\t" $1
+cut -f 4-8 -d $'\n' $1 | paste -s $1
+
+#AWM text processing 
+#param code per line+fields and file
+awk '/search pattern1/ {Actions}
+     /search pattern2/ {Actions}' file
+awk '!$2 || !$3 || !$4 { print "Not all scores are available for " $1 }' $1
+awk '{
+    if ($2<50 || $3<50 || $4<50) { print $1, ": Fail" } 
+    else { printf "%c : Pass\n", $1 }
+ }' $1
+
+awk '{
+    sum=$2+$3+$4;
+    avg=sum/3;
+    if (avg >= 80) 
+        print $0, ": A";
+    else if (avg >= 60) 
+        print $0, ": B";
+    else if (avg >= 50) 
+        print $0, ": C";
+    else 
+        print $0, ": FAIL";
+}' $1
+awk 'BEGIN {
+    print "leggo";
+}   {
+    if (NR%2 == 1) last=$0; 
+    else {
+        print last ";" $0;
+        last="";
+    }
+}
+END {
+    if (last!="") print last ";"; 
+}' $1
+
+#Grep Text/RegEx search
+#params -c(only count)/i(case insentive)/e(RegEx)/n(line number)/m(maximalRows)/v(inverse results)/w(match single word)
+grep -ine ".*the.*" $1
+grep -iE '\b(the|that|then|those)\b' #b=word-boundary
+grep -e "\([0-9]\)[ ]\?\1" $1
+grep -ivw "that" $1
+
+#Sed
+#params -e(script)/s(substitute)/g(change all)/I(ignore case)
+sed -e 's/from/to/g' $1
+sed -e "s/\bthe\b/this/1" $1
+sed -e "s/\b\(thy\)\b/{\1}/gI" $1
+sed -e "s/\d\d\d\d \d\d\d\d \d\d\d\d/**** **** ****/1" $1
+sed -e "s/\bthy\b/your/gI" $1
+sed -e "s/\d\{4\} /**** /g" $1 #last block hast nl not space!
+sed -e "s/\(\d\{4\}\) \(\d\{4\}\) \(\d\{4\}\) \(\d\{4\}\)/\4 \3 \2 \1/1" #reverse blocks
